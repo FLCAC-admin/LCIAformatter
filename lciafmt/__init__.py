@@ -21,7 +21,7 @@ import lciafmt.recipe as recipe
 import lciafmt.ipcc as ipcc
 import lciafmt.fedefl_inventory as fedefl_inventory
 import lciafmt.glam as glam
-import lciafmt.odp as odp
+import lciafmt.noaa as noaa
 import lciafmt.usetox as usetox
 import lciafmt.util as util
 import lciafmt.endpoint as ep
@@ -38,7 +38,7 @@ class Method(Enum):
     TRACI = "TRACI 2.1"
     TRACI2_2 = "TRACI 2.2"
     TRACI3_0 = "TRACI 3.0"
-    NOAA_ODP = "NOAA ODP"
+    NOAA = "NOAA"
     RECIPE_2016 = "ReCiPe 2016"
     USETOX = "USEtox"
     GLAM = "GLAM"
@@ -122,8 +122,8 @@ def get_method(method_id, add_factors_for_missing_contexts=True,
         method_id = util.check_as_class(method_id)
     if method_id == Method.TRACI or method_id == Method.TRACI2_2 or method_id == Method.TRACI3_0:
         return traci.get(method_id, add_factors_for_missing_contexts, file=file, url=None)
-    if method_id == Method.NOAA_ODP:
-        return odp.get()
+    if method_id == Method.NOAA:
+        return noaa.get()
     if method_id == Method.RECIPE_2016:
         return recipe.get(add_factors_for_missing_contexts, endpoint, summary,
                           file=file, url=url)

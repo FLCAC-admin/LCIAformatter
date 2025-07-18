@@ -32,7 +32,7 @@
     "name": "TRACI 3.0",
     "detail_note": "UPDATE",
     "methods": {"Global Climate": {"IPCC": ["AR6-100", "AR5-100", "AR4-100"]},
-                "Ozone Depletion": {"NOAA_ODP": ["Ozone Depletion Potential"]},
+                "Ozone Depletion": {"NOAA": ["Ozone Depletion Potential"]},
                 "Eutrophication Freshwater": {"TRACI2_2": ["Eutrophication (Freshwater)"]},
                 "Eutrophication Marine": {"TRACI2_2": ["Eutrophication (Marine)"]},
                 "Human Health Particulate Matter": {"GLAM": ["HH Fine Particulate Matter Impacts"]},
@@ -43,7 +43,7 @@
                 "Human Health Noncancer Recommended only": {"USEtox": ["Human health noncancer (Recommended)"]},
                 "Ecotoxicity Recommended only": {"USEtox": ["Ecotoxicity (Recommended)"]},
                 "Acidification": {"TRACI3_0": ["Acidification"]},
-                "Ozone Formation": {"TRACI3_0": ["Ozone Formation"]}
+                "Photochemical Ozone Formation": {"TRACI3_0": ["Ozone Formation"]}
                 },
     "smog_url": "https://pasteur.epa.gov/uploads/10.23719/1532158/TRACI%20Ozone%20v01a.xlsx",
     "smog_file": "TRACI Ozone v01a.xlsx",
@@ -56,7 +56,7 @@
     "source_type": "UPDATE"
   },
   {
-    "id": "NOAA_ODP",
+    "id": "NOAA",
     "name": "NOAA ODP",
     "detail_note": "UPDATE",
     "path": "traci",

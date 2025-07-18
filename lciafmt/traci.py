@@ -360,7 +360,7 @@ def get_traci3(method, add_factors_for_missing_contexts=True) -> pd.DataFrame:
                        )
                 if(len(df0['Flow UUID'].unique()) != flow_count):
                     raise IndexError('Error dropping duplicates from IPCC')
-        df0['category'] = df0['Method']
+        df0['category'] = meta.get('name')
         df0['source_method'] = df0['Method']
         df0['Method'] = meta.get('name')
         df0['Indicator'] = ind
@@ -402,7 +402,7 @@ def _read_smog(method=None):
         region_id = row['ISO 3']
         dfutil.record(records,
                       method='TRACI 3.0',
-                      indicator='Smog Formation',
+                      indicator='Photochemical Ozone Formation',
                       indicator_unit='kg O3 eq',
                       flow=flow,
                       flow_category='air',
@@ -421,6 +421,7 @@ def _read_acidification(method=None):
         method = lciafmt.Method.TRACI3_0
     meta = method.get_metadata()
     f = datapath / meta['acid_file']
+    # TODO: when this file goes live update to get_or_download
     # f = cache.get_or_download(file = meta['acid_file'],
     #                           url = meta['acid_url'])
     df = (pd.read_excel(f, sheet_name = 'Midpoint as SO2eq')

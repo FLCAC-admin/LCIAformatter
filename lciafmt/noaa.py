@@ -1,4 +1,4 @@
-# odp.py (lciafmt)
+# noaa.py (lciafmt)
 # !/usr/bin/env python3
 # coding=utf-8
 """
@@ -83,7 +83,7 @@ def get() -> pd.DataFrame:
                         except ValueError:
                             log.warning(f'Error in {row["Industrial Designation or Chemical Name"]}')
                 dfutil.record(records,
-                            method='NOAA ODP',
+                            method='NOAA',
                             indicator='Ozone Depletion Potential', 
                             indicator_unit='kg CFC-11 equivalent',
                             flow=row['Industrial Designation or Chemical Name'],
@@ -107,7 +107,7 @@ def get() -> pd.DataFrame:
                     else:
                         gwpCF = float(row['GWP 100-yr'])
                 dfutil.record(records,
-                            method='NOAA ODP',
+                            method='NOAA',
                             indicator='Climate Change Potential', 
                             indicator_unit='kg CO2 equivalent',
                             flow=row['Industrial Designation or Chemical Name'],
@@ -141,7 +141,7 @@ def get() -> pd.DataFrame:
 
 if __name__ == "__main__":
     import lciafmt
-    method = lciafmt.Method.NOAA_ODP
+    method = lciafmt.Method.NOAA
     df = lciafmt.get_method(method)
     mapped_df = lciafmt.map_flows(df, system=method.get_metadata().get('mapping'))
     mapped_df2 = lciafmt.util.collapse_indicators(mapped_df)
