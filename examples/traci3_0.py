@@ -20,9 +20,9 @@ def main():
         # emissions for Ozone Formation beyond generic emission/air
         # state and country data only, no counties
         df_no_counties = drop_county_data(df)
-        smog = df_no_counties.query('Indicator == "Ozone Formation"')
+        smog = df_no_counties.query('Indicator == "Photochemical Ozone Formation"')
         final_df = pd.concat([
-            df_no_counties.query('Indicator != "Ozone Formation"')
+            df_no_counties.query('Indicator != "Photochemical Ozone Formation"')
                           .assign(Location = lambda x: x['Location']
                                   .replace('US', 'United States of America')),
             smog.query('Context == "emission/air"')], ignore_index=True)
@@ -33,7 +33,7 @@ def main():
     #%% Write to json
     df = lciafmt.get_mapped_method(method)
     df_json = drop_county_data_and_assign_names(df)
-    # df_json = df_json.query('Context == "emission/air"')
+    # df_json = df_json.query('Context == "emission/air" or Context == "emission/water"')
     save_json(method, df_json,
               regions=regions,
               write_flows=write_flows_to_json,
