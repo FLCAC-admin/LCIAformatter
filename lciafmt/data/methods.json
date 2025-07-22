@@ -30,7 +30,7 @@
   {
     "id": "TRACI3_0",
     "name": "TRACI 3.0",
-    "detail_note": "UPDATE",
+    "detail_note": "TRACI 3.0 is a compilation of new and existing impact categories. Several impact categories are provided with spatially-resolved characterization factors, including two categories which were developed specifically for TRACI 3.0 – eutrophication and photochemical ozone formation. In these cases, global averages are used as the default if no location is provided.",
     "methods": {"Global Climate": {"IPCC": ["AR6-100", "AR5-100", "AR4-100"]},
                 "Ozone Depletion": {"NOAA": ["Ozone Depletion Potential"]},
                 "Eutrophication Freshwater": {"TRACI2_2": ["Eutrophication (Freshwater)"]},
@@ -52,8 +52,9 @@
     "path": "traci",
     "case_insensitivity": "False",
     "url": "TBD",
-    "citation": "UPDATE",
-    "source_type": "UPDATE"
+    "bib_id": "bare_traci_2025",
+    "citation": "Bare et al. 2025",
+    "source_type": "various"
   },
   {
     "id": "NOAA",
