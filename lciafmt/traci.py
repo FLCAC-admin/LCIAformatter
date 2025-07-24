@@ -424,7 +424,7 @@ def _read_acidification(method=None):
     # TODO: when this file goes live update to get_or_download
     # f = cache.get_or_download(file = meta['acid_file'],
     #                           url = meta['acid_url'])
-    df = (pd.read_excel(f, sheet_name = 'Midpoint as SO2eq')
+    df = (pd.read_excel(f, sheet_name = 'ExpandedResults')
             .query('~LCIAMethod_location.str.startswith("x")')
             .query('`Sector Weight` == "General"')
             )
@@ -433,18 +433,21 @@ def _read_acidification(method=None):
     for index, row in df.iterrows():
         location = ("" if row["LCIAMethod_location"] == "GLO"
                     else row['LCIAMethod_location_name'])
+        if row['LCIAMethod_location_name'] == "World":
+            # Use "World (emission weighted)" only
+            continue
         cas = (row['FLOW_casnumber'].lstrip('0') if isinstance(row['FLOW_casnumber'], str)
                else '')
         dfutil.record(records,
                       method='TRACI 3.0',
                       indicator='Acidification Potential',
                       indicator_unit='kg SO2 eq',
-                      flow=row['FLOW_name'],
+                      flow=row['Related Flow'],
                       flow_category=row['FLOW_class1'],
                       flow_unit='kg',
                       cas_number=cas,
                       location=location,
-                      factor=row['CF'])
+                      factor=row['CF normalized'])
 
     return dfutil.data_frame(records)
 

@@ -48,7 +48,7 @@
     "smog_url": "https://pasteur.epa.gov/uploads/10.23719/1532158/TRACI%20Ozone%20v01a.xlsx",
     "smog_file": "TRACI Ozone v01a.xlsx",
     "acid_url": "UPDATE",
-    "acid_file": "acidification CF output_v00a_midpoint_2025-04-25_11-48_addSO2eq.xlsx",
+    "acid_file": "CF_Terrestrial_Acidification_midpoint_emission_weighting.xlsx",
     "path": "traci",
     "case_insensitivity": "False",
     "url": "TBD",
