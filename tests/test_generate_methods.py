@@ -4,7 +4,10 @@ import pytest
 import lciafmt
 from lciafmt.util import store_method, MODULEPATH
 
-skip_list = ['ImpactWorld'] # requires pyodbc
+skip_list = ['ImpactWorld', # requires pyodbc
+             'TRACI2_2', # memory error
+             'TRACI3_0', # files not fully available
+             ]
 
 @pytest.mark.generate_methods
 def test_generate_methods():
