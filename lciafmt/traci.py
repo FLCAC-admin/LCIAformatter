@@ -25,10 +25,12 @@ flowables_split = pd.read_csv(datapath / 'TRACI_2.1_split.csv')
 
 def get(method, add_factors_for_missing_contexts=True, file=None,
         url=None) -> pd.DataFrame:
-    if method.name.startswith('TRACI2'):
+    if method.value.startswith('TRACI 2'):
         return get_traci2(method, add_factors_for_missing_contexts, file, url)
-    elif method.name.startswith('TRACI3'):
+    elif method.value.startswith('TRACI 3'):
         return get_traci3(method, add_factors_for_missing_contexts)
+    else:
+        raise FileNotFoundError
 
 def get_traci2(method, add_factors_for_missing_contexts=True, file=None,
         url=None) -> pd.DataFrame:
