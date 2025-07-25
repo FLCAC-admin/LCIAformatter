@@ -1,7 +1,6 @@
 import pandas as pd
 import lciafmt
-from lciafmt.util import store_method, save_json, log
-import esupy.location
+from lciafmt.util import store_method, save_json, log, drop_county_data_and_assign_names
 
 
 method = lciafmt.Method.TRACI2_2
@@ -17,23 +16,8 @@ def main():
     # and all countries
     store_method(mapped_df, method)
 
-    # Assigns codes to states e.g., "US-AL", leaves counties as FIPS
-    state_df = esupy.location.assign_state_abbrev(mapped_df)
-
-    # Convert country names to ISO Country codes, not all will map
-    country_codes = (esupy.location.read_iso_3166()
-                     .filter(['Name', 'ISO-2d'])
-                     .set_index('Name')['ISO-2d'].to_dict())
-    # prevents dropping of the factors without locations
-    country_codes[''] = ''
-    all_df = state_df.copy()
-    all_df['Location'] = (all_df['Location']
-                          .map(country_codes)
-                          .fillna(all_df['Location']))
-    all_df = (all_df.query('Location.isin(@country_codes.values()) |'
-                           'Location == "US" |'
-                           'Location.str.startswith("US-")')
-              .reset_index(drop=True))
+    # drop county FIPS, leave only US states and countries
+    all_df = drop_county_data_and_assign_names(mapped_df)
 
     save_json(method, all_df, regions=regions)
 

@@ -20,6 +20,9 @@ import lciafmt.traci as traci
 import lciafmt.recipe as recipe
 import lciafmt.ipcc as ipcc
 import lciafmt.fedefl_inventory as fedefl_inventory
+import lciafmt.glam as glam
+import lciafmt.noaa as noaa
+import lciafmt.usetox as usetox
 import lciafmt.util as util
 import lciafmt.endpoint as ep
 import lciafmt.custom as custom
@@ -34,7 +37,11 @@ class Method(Enum):
 
     TRACI = "TRACI 2.1"
     TRACI2_2 = "TRACI 2.2"
+    TRACI3_0 = "TRACI 3.0"
+    NOAA = "NOAA"
     RECIPE_2016 = "ReCiPe 2016"
+    USETOX = "USEtox"
+    GLAM = "GLAM"
     FEDEFL_INV = "FEDEFL Inventory"
     CED = "Cumulative Energy Demand"
     ImpactWorld = "ImpactWorld"
@@ -113,8 +120,10 @@ def get_method(method_id, add_factors_for_missing_contexts=True,
         return custom.get_custom_method(file=file)
     else:
         method_id = util.check_as_class(method_id)
-    if method_id == Method.TRACI or method_id == Method.TRACI2_2:
+    if method_id == Method.TRACI or method_id == Method.TRACI2_2 or method_id == Method.TRACI3_0:
         return traci.get(method_id, add_factors_for_missing_contexts, file=file, url=None)
+    if method_id == Method.NOAA:
+        return noaa.get()
     if method_id == Method.RECIPE_2016:
         return recipe.get(add_factors_for_missing_contexts, endpoint, summary,
                           file=file, url=url)
@@ -123,6 +132,10 @@ def get_method(method_id, add_factors_for_missing_contexts=True,
         return impactworld.get(file=file, url=url)
     if method_id == Method.IPCC:
         return ipcc.get()
+    if method_id == Method.USETOX:
+        return usetox.get(method_id)
+    if method_id == Method.GLAM:
+        return glam.get(method_id)
     if method_id == Method.FEDEFL_INV:
         return fedefl_inventory.get(subset)
     if method_id == Method.CED:

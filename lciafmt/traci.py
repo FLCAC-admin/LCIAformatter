@@ -25,6 +25,15 @@ flowables_split = pd.read_csv(datapath / 'TRACI_2.1_split.csv')
 
 def get(method, add_factors_for_missing_contexts=True, file=None,
         url=None) -> pd.DataFrame:
+    if method.value.startswith('TRACI 2'):
+        return get_traci2(method, add_factors_for_missing_contexts, file, url)
+    elif method.value.startswith('TRACI 3'):
+        return get_traci3(method, add_factors_for_missing_contexts)
+    else:
+        raise FileNotFoundError
+
+def get_traci2(method, add_factors_for_missing_contexts=True, file=None,
+        url=None) -> pd.DataFrame:
     """Generate a method for TRACI in standard format.
 
     :param add_factors_for_missing_contexts: bool, if True generates average
@@ -323,12 +332,132 @@ def _read_eutro(xls_file: str) -> pd.DataFrame:
 
     return df2
 
+def get_traci3(method, add_factors_for_missing_contexts=True) -> pd.DataFrame:
+    df_list = []
+    meta = method.get_metadata()
+    
+    # use config to id which methods to use
+    for ind, m_dict in meta.get('methods').items():
+        m = list(m_dict.keys())[0]
+        if m == "TRACI3_0":
+            if 'Acidification' in list(m_dict.values())[0]:
+                df0 = _read_acidification(method)
+                df0 = lciafmt.map_flows(df0, system='TRACI_GLAM')
+            elif 'Ozone Formation' in list(m_dict.values())[0]:
+                df0 = _read_smog(method)
+                df0 = lciafmt.map_flows(df0, system='TRACI_SAPRC')
+        else:
+            indicators = list(x for x in m_dict.values())[0]
+            df0 = lciafmt.get_mapped_method(method_id=list(m_dict.keys())[0],
+                                           indicators=indicators,
+                                           download_from_remote=False)
+            if m == "IPCC":
+                # Ensure that only the lastest IPCC value is maintained for each flow
+                flow_count = len(df0['Flow UUID'].unique())
+                df0 = (df0
+                       .sort_values(by='Indicator', ascending=False)
+                       .drop_duplicates(subset=['Flowable', 'Flow UUID', 'Context'],
+                                        keep='first')
+                       .sort_values(by=['Flowable', 'Context'])
+                       )
+                if(len(df0['Flow UUID'].unique()) != flow_count):
+                    raise IndexError('Error dropping duplicates from IPCC')
+        df0['category'] = meta.get('name')
+        df0['source_method'] = df0['Method']
+        df0['Method'] = meta.get('name')
+        df0['Indicator'] = ind
+        df0['Indicator unit'] = df0['Indicator unit'].str.replace('equivalent', 'eq')
+        df_list.append(df0)
+    return pd.concat(df_list, ignore_index=True)
+
+def _read_smog(method=None):
+    """Extracts midpoint smog formation data from data.gov for TRACI 3.0
+    """
+    if not method:
+        method = lciafmt.Method.TRACI3_0
+    meta = method.get_metadata()
+    f = cache.get_or_download(file = meta['smog_file'],
+                              url = meta['smog_url'])
+    df = (pd.read_excel(f, sheet_name = 'Aggregated Values')
+            .drop(columns='ID')
+            .query('~`ISO 3`.str.startswith("x")')
+            .rename(columns={'Name': 'Region'})
+            )
+    cols = ['ISO 3', 'Region']
+    df = (df
+          .melt(id_vars=cols, var_name = 'Name', value_name = 'Amount')
+          .assign(Name = lambda x: x['Name'].str.strip())
+          )
+
+    flows = (pd.read_excel(f, sheet_name = 'Substances')
+               .rename(columns={'Name': 'Flowable',
+                                'SAPRC Name': 'Name'})
+               .drop_duplicates(subset='Name')
+               )
+    df = (df.merge(flows, how='left', on='Name', validate='m:1')
+            .drop(columns='Name')
+            )
+
+    records = []
+    for i, row in df.iterrows():
+        flow = row['Flowable']
+        region_id = row['ISO 3']
+        dfutil.record(records,
+                      method='TRACI 3.0',
+                      indicator='Photochemical Ozone Formation',
+                      indicator_unit='kg O3 eq',
+                      flow=flow,
+                      flow_category='air',
+                      flow_unit="kg",
+                      factor=row['Amount'],
+                      location='' if region_id == "GLO" else row['Region']
+                      )
+
+    return dfutil.data_frame(records)
+
+
+def _read_acidification(method=None):
+    """Extracts midpoint acidification data from data.gov for TRACI 3.0
+    """
+    if not method:
+        method = lciafmt.Method.TRACI3_0
+    meta = method.get_metadata()
+    f = datapath / meta['acid_file']
+    # TODO: when this file goes live update to get_or_download
+    # f = cache.get_or_download(file = meta['acid_file'],
+    #                           url = meta['acid_url'])
+    df = (pd.read_excel(f, sheet_name = 'ExpandedResults')
+            .query('~LCIAMethod_location.str.startswith("x")')
+            .query('`Sector Weight` == "General"')
+            )
+
+    records = []
+    for index, row in df.iterrows():
+        location = ("" if row["LCIAMethod_location"] == "GLO"
+                    else row['LCIAMethod_location_name'])
+        if row['LCIAMethod_location_name'] == "World":
+            # Use "World (emission weighted)" only
+            continue
+        cas = (row['FLOW_casnumber'].lstrip('0') if isinstance(row['FLOW_casnumber'], str)
+               else '')
+        dfutil.record(records,
+                      method='TRACI 3.0',
+                      indicator='Acidification Potential',
+                      indicator_unit='kg SO2 eq',
+                      flow=row['Related Flow'],
+                      flow_category=row['FLOW_class1'],
+                      flow_unit='kg',
+                      cas_number=cas,
+                      location=location,
+                      factor=row['CF normalized'])
+
+    return dfutil.data_frame(records)
+
 
 #%%
 if __name__ == "__main__":
-    from lciafmt.util import store_method
-    method = lciafmt.Method.TRACI2_2
+    from lciafmt.util import store_method, save_json, drop_county_data,\
+        drop_county_data_and_assign_names
+    method = lciafmt.Method.TRACI3_0
     df = get(method)
-    mapping = method.get_metadata()['mapping']
-    mapped_df = lciafmt.map_flows(df, system=mapping)
-    store_method(mapped_df, method)
+    store_method(df, method)
