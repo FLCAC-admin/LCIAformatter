@@ -54,7 +54,6 @@ def _read(file: str, region) -> pd.DataFrame:
     log.info(f"read ImpactWorld+ from file {file}")
 
     df = pd.read_excel(file)
-    # df = df_orig.copy()
     df = (df
           .drop(df.columns[[0]], axis=1)
           .rename(columns={'Impact category': 'Indicator',
@@ -79,8 +78,37 @@ def _read(file: str, region) -> pd.DataFrame:
           .assign(Flowable = lambda x: np.where(x['Scale'].isin(generic_cols),
               x['Elem flow name'],
               x['Elem flow name'].apply(lambda z: ','.join(z.split(',')[:-1]).strip())))
+          # remove ", GLO" from the end of applicable elementary flow names. Global designation is retained in 'Scale' field
+          .assign(Flowable = lambda x: x['Flowable'].apply(
+              lambda z: z.replace(', GLO', '') if ', GLO' in z else z))
           )
+    
+    # list of location fragments not dealt with in preceding step. 
+    locations = [', IAI Area',
+                 ', IAI Area, Asia',
+                 ', Europe',
+                 ', Australia',
+                 ', France',
+                 ', IAI Area, North America',
+                 ', Québec']
 
+    # iterate through the data frame. Delete location fragments and append to existing (partial) locations.
+    for i in range(len(df)):
+        name = df.loc[i, 'Flowable']
+        for code in locations:
+            if name.endswith(code):
+                # Remove the country code from the flow name
+                new_name = name[:-len(code)].rstrip()
+                df.loc[i, 'Flowable'] = new_name
+
+                # Append the country code to the location field
+                current_location = df.loc[i, 'Location']
+                if pd.notna(current_location) and current_location.strip() != '':
+                    cleaned_code = code.lstrip(',').strip()
+                    df.loc[i, 'Location'] = f"{cleaned_code}, {current_location}"
+                else:
+                    df.loc[i, 'Location'] = code
+    
     # Review locations and flows
     flows = pd.Series(df.query('Scale in @generic_cols')['Elem flow name'].unique())
     df2 = df.query('Flowable not in @flows')

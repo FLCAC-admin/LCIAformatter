@@ -166,6 +166,9 @@ def map_flows(df: pd.DataFrame, system=None, mapping=None,
     mapper = fmap.Mapper(df, system=system, mapping=mapping,
                          preserve_unmapped=preserve_unmapped,
                          case_insensitive=case_insensitive)
+    #Added line - for inspection of mapping file
+    mapper.to_excel("mapping_file.xlsx", index=False)
+    #Delete to prior comment
     mapped = mapper.run()
     x = mapped[mapped[['Method', 'Indicator', 'Flowable', 'Flow UUID', 'Location']
                       ].duplicated(keep=False)]
