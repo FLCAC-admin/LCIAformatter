@@ -7,6 +7,7 @@ This module contains functions needed to compile LCIA methods from ImpactWorld+
 
 import pandas as pd
 import numpy as np
+import re
 import lciafmt
 import lciafmt.cache as cache
 import lciafmt.df as dfutil
@@ -92,65 +93,31 @@ def _read(file: str, region) -> pd.DataFrame:
                  ', IAI Area, North America',
                  ', Québec']
 
-    # iterate through the data frame. Delete location fragments and append to existing (partial) locations.
-    for i in range(len(df)):
-        name = df.loc[i, 'Flowable']
-        for code in locations:
-            if name.endswith(code):
-                # Remove the country code from the flow name
-                new_name = name[:-len(code)].rstrip()
-                df.loc[i, 'Flowable'] = new_name
+    # Create a regex pattern to match any of the location fragments at the end of the string
+    pattern = '(' + '|'.join(map(re.escape, locations)) + ')$'
+    df['matched_code'] = df['Flowable'].str.extract(pattern)
+    df['matched_code'] = df['matched_code'].str.lstrip(',').str.strip()
+    df['Flowable'] = df['Flowable'].str.replace(pattern, '', regex=True).str.rstrip()
 
-                # Append the country code to the location field
-                current_location = df.loc[i, 'Location']
-                if pd.notna(current_location) and current_location.strip() != '':
-                    cleaned_code = code.lstrip(',').strip()
-                    df.loc[i, 'Location'] = f"{cleaned_code}, {current_location}"
-                else:
-                    df.loc[i, 'Location'] = code
-    
+    # Update Location column: if existing location is not empty, prepend matched_code
+    mask = (df['matched_code'].notna()) | (df['matched_code'] != "")
+    df.loc[mask, 'Location2'] = (
+        df['matched_code'][mask] + ', ' + df.loc[mask, 'Location'].fillna('').str.strip()
+    ).str.strip(', ')
+    df['Location'] = df['Location2'].fillna(df['Location'])
+
     # Review locations and flows
     flows = pd.Series(df.query('Scale in @generic_cols')['Elem flow name'].unique())
     df2 = df.query('Flowable not in @flows')
     flow_context = df[['Flowable', 'Context']].drop_duplicates()
 
     df = (df
-          .drop(columns=['Elem flow name', 'Compartment', 'Sub-compartment'])
+          .drop(columns=['Elem flow name', 'Compartment', 'Sub-compartment',
+                         'matched_code', 'Location2'])
           )
 
     return df
 
-
-def update_context(df_context) -> pd.DataFrame:
-    """Replace unspecified contexts for indicators.
-
-    For indicators that don't rely on sub-compartments for characterization
-    factor selection, update the context for improved context mapping.
-    """
-    single_context = ['Freshwater acidification',
-                      'Terrestrial acidification',
-                      'Climate change, long term',
-                      'Climate change, short term',
-                      'Climate change, ecosystem quality, short term',
-                      'Climate change, ecosystem quality, long term',
-                      'Climate change, human health, short term',
-                      'Climate change, human health, long term',
-                      'Photochemical oxidant formation',
-                      'Ozone Layer Depletion',
-                      'Ozone layer depletion',
-                      'Marine acidification, short term',
-                      'Marine acidification, long term',
-                      'Ionizing radiations',
-                      ]
-
-    context = {'Air/(unspecified)': 'Air',
-               # 'Water/(unspecified)': 'Water',
-               }
-
-    df_context.loc[df_context['Indicator'].isin(single_context),
-                   'Context'] = df_context['Context'].map(context).fillna(df_context['Context'])
-
-    return df_context
 
 if __name__ == "__main__":
     method = lciafmt.Method.ImpactWorld
