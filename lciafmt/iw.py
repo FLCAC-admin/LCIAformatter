@@ -123,3 +123,24 @@ if __name__ == "__main__":
     method = lciafmt.Method.ImpactWorld
     data = lciafmt.get_method(method)
     mapped_data = lciafmt.map_flows(data, system=method.get_metadata()['mapping'])
+    mapped_data2 = lciafmt.util.collapse_indicators(mapped_data)
+    mapped_data2.query('Method == "ImpactWorld+ - Endpoint"').to_excel("Endpoint.xlsx")
+    
+    
+    # Get a count of unique flows by indicator by context
+    df = (mapped_data2
+          .query('Method == "ImpactWorld+ - Endpoint"')
+          .filter(['Method', 'Indicator', 'Flowable', 'Flow UUID', 'Context',
+                   'CAS No', 'Unit'])
+          .drop_duplicates()
+                      )
+    
+    #
+    f = _get_file(lciafmt.Method.ImpactWorld.get_metadata())
+    raw = _read(f, None)
+    raw2 = (raw
+            .query('`MP or Damage` == "Damage"')
+            .filter(['Indicator', 'Flowable', 'Context',
+                     'CAS No', 'Unit'])
+            .drop_duplicates()
+                        )
