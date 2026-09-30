@@ -155,7 +155,14 @@ class Mapper(object):
                 r[6] = target.uuid
                 r[7] = target.category
                 r[8] = target.unit
-                r[12] = r[12]/float(target.conversionfactor)
+                # ConversionFactor is a divisor (unit / stock scaling). A factor
+                # of 0 means the mapped characterization factor should be 0;
+                # dividing would yield inf/NaN.
+                conv = float(target.conversionfactor)
+                if conv == 0.0:
+                    r[12] = 0.0
+                else:
+                    r[12] = r[12] / conv
                 records.append(r)
                 mapped += 1
         log.info("created %i factors for mapped flows; " +
