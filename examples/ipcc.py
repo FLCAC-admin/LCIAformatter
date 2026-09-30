@@ -1,7 +1,7 @@
-"""Build IPCC GWP method with stock and net biogenic indicator variants.
+"""Build IPCC GWP method with stock and gross biogenic indicator variants.
 
 Drops AR4. Stock indicators keep AR5/AR6 names (FEDEFL IPCC mapping, 0/0).
-Net biogenic variants append ' Net Biogenic' (FEDEFL IPCC_net mapping, +1/-1).
+Gross biogenic variants append ' Gross Biogenic' (FEDEFL IPCC_gross mapping, +1/-1).
 Writes parquet plus JSON-LD with and without FEDEFL flows.
 """
 import pandas as pd
@@ -18,7 +18,7 @@ from lciafmt.util import (
 
 
 method = lciafmt.Method.IPCC
-NET_SUFFIX = ' Net Biogenic'
+GROSS_SUFFIX = ' Gross Biogenic'
 
 
 def main():
@@ -26,11 +26,11 @@ def main():
     data = data[~data['Indicator'].str.startswith('AR4')].reset_index(drop=True)
 
     stock = lciafmt.map_flows(data, system='IPCC')
-    net = lciafmt.map_flows(data, system='IPCC_net')
-    net = net.copy()
-    net['Indicator'] = net['Indicator'] + NET_SUFFIX
+    gross = lciafmt.map_flows(data, system='IPCC_gross')
+    gross = gross.copy()
+    gross['Indicator'] = gross['Indicator'] + GROSS_SUFFIX
 
-    mapped = pd.concat([stock, net], ignore_index=True)
+    mapped = pd.concat([stock, gross], ignore_index=True)
     mapped = collapse_indicators(mapped)
     print('indicators:', sorted(mapped['Indicator'].unique()))
     print('rows', len(mapped))
