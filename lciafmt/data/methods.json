@@ -73,7 +73,7 @@
     "id": "IPCC",
     "name": "IPCC",
     "mapping": "IPCC",
-    "detail_note": "Factors are based on those reported in Table 2.14 (AR4), Table 8.A.1 (AR5), and Table 7.SM.7 (AR6).",
+    "detail_note": "Factors are based on those reported in Table 8.A.1 (AR5) and Table 7.SM.7 (AR6). Each horizon is published twice: stock biogenic accounting (0/0) via the IPCC mapping, and net biogenic accounting (+1/-1; indicator names suffixed ' Net Biogenic') via the IPCC_net mapping.",
     "path": "ipcc",
     "case_insensitivity": "False",
     "url": "https://github.com/USEPA/LCIAformatter/blob/master/lciafmt/data/IPCC_GWP_values.csv",
@@ -81,7 +81,7 @@
                "AR5": "myhre_anthropogenic_2013",
                "AR4": "forster_changes_2007"
                 },
-    "citation": "Forster and Ramaswamy 2007 (AR4), Myhre and Shindell 2013 (AR5), Forster and Storelvmo 2021 (AR6)",
+    "citation": "Myhre and Shindell 2013 (AR5), Forster and Storelvmo 2021 (AR6)",
     "source_type": "csv"
   },
   {
