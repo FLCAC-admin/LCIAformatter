@@ -10,7 +10,7 @@ on:
 
 jobs:
   generate_methods:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -42,7 +42,7 @@ jobs:
         name: lciafmt_methods
         # A file, directory or wildcard patter that describes what to upload
         path: |
-            # ~/Library/Application Support/lciafmt/*
-            ~/Library/Application Support/lciafmt/diff/*
+            # ~/.local/share/lciafmt/*
+            ~/.local/share/lciafmt/diff/*
         if-no-files-found: warn # 'warn' or 'ignore' are also available, defaults to `warn`
         # retention-days: 5 # cannot exceed the retention limit set by the repository, organization, or enterprise.
