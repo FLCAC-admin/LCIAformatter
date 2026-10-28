@@ -23,6 +23,25 @@ from .util import is_non_empty_str, generate_method_description,\
     log, pkg_version_number, datapath, check_as_class
 
 
+def indicator_direction(contexts) -> Optional[str]:
+    """Return ``INPUT``, ``OUTPUT``, or ``None`` for an impact category.
+
+    Resource contexts are inputs and other contexts are outputs. openLCA
+    negates a characterization factor when the flow direction differs from
+    the category direction, so a category that contains both must leave
+    direction unset and keep the stored signs.
+    """
+    flags = (pd.Series(list(contexts)).fillna('')
+             .astype(str).str.startswith('resource'))
+    if flags.empty:
+        return None
+    if bool(flags.all()):
+        return 'INPUT'
+    if not bool(flags.any()):
+        return 'OUTPUT'
+    return None
+
+
 class Writer(object):
 
     def __init__(self, zip_file: str):
@@ -30,6 +49,7 @@ class Writer(object):
         self.__writer = zipio.ZipWriter(zip_file)
         self.__methods = {}
         self.__indicators = {}
+        self.__directions = {}
         self.__flows = {}
         self.__coordinates = {}
         self.__locations = {}
@@ -64,6 +84,7 @@ class Writer(object):
                 df[['Method', 'source_method']].values.ravel('K'))
         indicators = pd.unique(
                 df[['Indicator', 'source_indicator']].values.ravel('K'))
+        self.__directions = self._directions(df)
 
         # identify all relevant bib_ids and sources
         for method in methods:
@@ -131,9 +152,12 @@ class Writer(object):
         ind.category = row['category']
         if 'Code' in row:
             ind.code = row['Code']
-        direction = ('INPUT' if row['Context'].startswith('resource')
-                     else 'OUTPUT')
-        ind.direction = o.Direction(direction)
+        direction = self.__directions.get(uid)
+        if direction is None:
+            log.info("%s has resource and emission factors; "
+                     "impact direction left unspecified", row['Indicator'])
+        else:
+            ind.direction = o.Direction(direction)
         ind.description = generate_method_description(row['source_method'],
                                                       row['Indicator'],
                                                       row['source_indicator'])
@@ -152,6 +176,19 @@ class Writer(object):
         method = self.__method(row)
         method.impact_categories.append(ind.to_ref())
         return ind
+
+    def _directions(self, df: pd.DataFrame) -> dict:
+        """Map each indicator id to INPUT, OUTPUT, or None."""
+        directions = {}
+        grouped = {}
+        for _, row in df.iterrows():
+            uid = row['Indicator UUID']
+            if not is_non_empty_str(uid):
+                uid = make_uuid(row['category'], row['Indicator'])
+            grouped.setdefault(uid, []).append(row['Context'])
+        for uid, contexts in grouped.items():
+            directions[uid] = indicator_direction(contexts)
+        return directions
 
     def __method(self, row) -> o.ImpactMethod:
         uid = row['Method UUID']

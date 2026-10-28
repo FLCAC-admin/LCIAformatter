@@ -11,7 +11,8 @@ def main():
 
     df = lciafmt.get_method(method)
     mapping = method.get_metadata()['mapping']
-    mapped_df = lciafmt.map_flows(df, system=mapping)
+    mapped_df = lciafmt.map_with_gross_biogenic(
+        df, mapping, indicators='Global warming')
 
     # write the result to parquet, includes states and counties as FIPS,
     # and all countries

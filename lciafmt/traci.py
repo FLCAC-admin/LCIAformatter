@@ -330,5 +330,6 @@ if __name__ == "__main__":
     method = lciafmt.Method.TRACI2_2
     df = get(method)
     mapping = method.get_metadata()['mapping']
-    mapped_df = lciafmt.map_flows(df, system=mapping)
+    mapped_df = lciafmt.map_with_gross_biogenic(
+        df, mapping, indicators='Global warming')
     store_method(mapped_df, method)

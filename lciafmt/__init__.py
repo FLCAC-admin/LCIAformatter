@@ -24,6 +24,7 @@ import lciafmt.util as util
 import lciafmt.endpoint as ep
 import lciafmt.custom as custom
 from lciafmt.custom import generate_lcia_compilation
+from lciafmt.carbon import gross_biogenic_mapping, map_with_gross_biogenic
 
 
 from enum import Enum

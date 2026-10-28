@@ -23,7 +23,8 @@ def main():
     # set preserve_unmapped=True if you want to keep unmapped
     # flows in the resulting data frame
     mapping = method.get_metadata()['mapping']
-    mapped_data = lciafmt.map_flows(data, system=mapping)
+    mapped_data = lciafmt.map_with_gross_biogenic(
+        data, mapping, indicators='Global warming')
 
     # write the result to parquet and JSON-LD
     store_method(mapped_data, method)

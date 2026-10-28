@@ -21,7 +21,7 @@ from fedelemflowlist.globals import flow_list_specs
 
 
 # set version number of package, needs to be updated with setup.py
-pkg_version_number = '1.2.0'
+pkg_version_number = '1.4.0'
 MODULEPATH = Path(__file__).resolve().parent
 datapath = MODULEPATH / 'data'
 
@@ -312,9 +312,14 @@ def compare_to_remote(local_df, method_id):
         return
     remote_df = load_preprocessed_output(meta, paths)
     merge_cols = ['Method', 'Indicator', 'Flowable', 'Flow UUID',
-                  'Context']
+                  'Context', 'Location']
     cols = merge_cols + ['Characterization Factor']
-    df = pd.merge(local_df[cols], remote_df[cols],
+    local = local_df[cols].copy()
+    remote = remote_df[cols].copy()
+    # NaN vs '' must not split otherwise-matching rows (e.g. FEDEFL Inventory)
+    local['Location'] = local['Location'].fillna('')
+    remote['Location'] = remote['Location'].fillna('')
+    df = pd.merge(local, remote,
                   how='outer', on=merge_cols, suffixes=('','_remote'))
     df_diff = df.query('`Characterization Factor` '
                        '!= `Characterization Factor_remote`')
